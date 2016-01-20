@@ -27,7 +27,7 @@ hook.Add( "PS2_ModulesLoaded", "RewardsDLC", function( )
 		control = "DRewardsConfigurator"
 	} )
 
-	MODULES.Settings.DailyRewards = {
+	MODULE.Settings.DailyRewards = {
 		info = {
 			isManualSetting = true, --Ignored by AutoAddSettingsTable
 		},

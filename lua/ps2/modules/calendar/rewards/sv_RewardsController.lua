@@ -102,13 +102,15 @@ hook.Add( "OnReloaded", "RewardsController_SendPlayerInfo", function()
 end )
 
 function RewardsController:PlayerJoined( ply )
-	local join = Pointshop2.PlayerJoins:new( )
-	join.playerId = ply.kPlayerId
-	return join:save():Then( function( )
-		return Promise.Delay( 1 ) -- Delay sending stuff to avoid net issues
-	end )
-	:Then( function( )
-		RewardsController:getInstance( ):SendPlayerInfo( ply )
+	Pointshop2.DatabaseConnectedPromise:Done( function( ) -- Avoid errors if database not connected
+		local join = Pointshop2.PlayerJoins:new( )
+		join.playerId = ply.kPlayerId
+		return join:save():Then( function( )
+			return Promise.Delay( 1 ) -- Delay sending stuff to avoid net issues
+		end )
+		:Then( function( )
+			RewardsController:getInstance( ):SendPlayerInfo( ply )
+		end )
 	end )
 end
 
