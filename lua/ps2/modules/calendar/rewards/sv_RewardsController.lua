@@ -87,7 +87,7 @@ function RewardsController:SendPlayerInfo( ply )
 			end
 
 			local day = LibK.ConvertTimeUnits( use.date - startDate, "seconds", "days" )
-			day = math.floor( day ) + 1 // 0 Day difference means first day
+			day = math.floor( day ) + 1 -- 0 Day difference means first day
 			map[day] = true
 		end
 
@@ -101,15 +101,39 @@ hook.Add( "OnReloaded", "RewardsController_SendPlayerInfo", function()
 	end
 end )
 
+-- Reset streak after fullfilled
+function RewardsController:resetRunningStreak( ply ) 
+	return Pointshop2.PlayerJoins.static.getCurrentStreak( ply, Pointshop2.Rewards.DAYS_TRACKED + 1 )
+	:Then(function(countJoined) 
+		if countJoined != Pointshop2.Rewards.DAYS_TRACKED + 1 then
+			return
+		end
+		KLogf(4, "got stream of count %i, resetting", countJoined)
+
+		-- Remove all but the current day
+		local timePart
+		if Pointshop2.DB.CONNECTED_TO_MYSQL then
+            timePart = "NOW() - INTERVAL 1 MINUTE"
+        else
+            timePart = "datetime('now', '-1minutes')"
+        end
+		KLogf(4, "Reset where date  < %s", timePart)
+		return Pointshop2.PlayerJoins.removeDbEntries("WHERE joinedTime <= " .. timePart .. " AND playerId = " .. ply.kPlayerId)
+	end)
+end
+
 function RewardsController:PlayerJoined( ply )
 	Pointshop2.DatabaseConnectedPromise:Done( function( ) -- Avoid errors if database not connected
 		local join = Pointshop2.PlayerJoins:new( )
 		join.playerId = ply.kPlayerId
-		return join:save():Then( function( )
+		return join:save():Then( function( join )
+			return self:resetRunningStreak( ply )
+		end )
+		:Then(function() 
 			return Promise.Delay( 1 ) -- Delay sending stuff to avoid net issues
 		end )
 		:Then( function( )
-			RewardsController:getInstance( ):SendPlayerInfo( ply )
+			self:SendPlayerInfo( ply )
 		end )
 	end )
 end
@@ -128,6 +152,9 @@ function RewardsController:handleArtificialPlayerJoins( )
             local join = Pointshop2.PlayerJoins:new( )
             join.playerId = v.kPlayerId
             join:save( )
+			:Then( function( ) 
+				self:resetRunningStreak( v )
+			end )
             :Then( function( )
                 self:SendPlayerInfo( v )
             end )

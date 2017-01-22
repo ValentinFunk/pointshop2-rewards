@@ -54,3 +54,19 @@ function Pointshop2.PlayerJoins.static.getCurrentStreak( ply, periodInDays )
         return streak
     end )
 end
+
+function generate()
+    for i = 0, 6 do 
+        if Pointshop2.DB.CONNECTED_TO_MYSQL then
+            Pointshop2.DB.DoQuery(Format("INSERT INTO ps2_plyjoinstreak(playerId, joinedTime) VALUES (%i, NOW() - INTERVAL %i DAY)", 110, i))
+            :Then(function() 
+                print("CREATED")
+            end)
+        else
+            Pointshop2.DB.DoQuery(Format("INSERT INTO ps2_plyjoinstreak(playerId, joinedTime) VALUES (%i, datetime('now', '-%idays'))", player.GetByID(1).kPlayerId, i))
+            :Then(function() 
+                print("CREATED", player.GetByID(1).kPlayerId)
+            end)
+        end
+    end
+end
