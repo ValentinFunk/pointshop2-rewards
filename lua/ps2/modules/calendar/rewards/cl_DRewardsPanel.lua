@@ -29,7 +29,9 @@ function PANEL:Init( )
     for i = 1, Pointshop2.Rewards.DAYS_TRACKED do
         local box = self.grid:Add( "DRewardsBox" )
         box:SetDay( i )
-        box:SetOpened( RewardsView:getInstance().uses[i] )
+        if RewardsView:getInstance().uses then
+            box:SetOpened( RewardsView:getInstance().uses[i] )
+        end
     end
 end
 

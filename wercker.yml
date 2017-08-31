@@ -8,10 +8,6 @@ deploy:
   steps:
     - npm-install
     - script:
-      name: generate dist
-      code: |
-        npm run build
-    - script:
       name: update version
       code: |
         npm run sf-release
