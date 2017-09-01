@@ -95,7 +95,7 @@ function RewardsController:SendPlayerInfo( ply )
 		self:startView( "RewardsView", "ReceiveInfo", ply, streak, map )
 	end )
 end
-hook.Add( "OnReloaded", "RewardsController_SendPlayerInfo", function()
+Pointshop2.BootstrappedPromise:Then( function( )
 	for k, v in pairs( player.GetAll( ) ) do
 		RewardsController:getInstance( ):SendPlayerInfo( v )
 	end

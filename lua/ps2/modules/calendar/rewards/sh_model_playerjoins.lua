@@ -20,7 +20,7 @@ function Pointshop2.PlayerJoins.static.getCurrentStreak( ply, periodInDays )
         if Pointshop2.DB.CONNECTED_TO_MYSQL then
             timePart = "NOW() - INTERVAL " .. periodInDays .. " DAY"
         else
-            timePart = "datetime('now', '-" .. periodInDays .. "days')"
+            timePart = "datetime('now', '-" .. periodInDays .. " day')"
         end
         return Pointshop2.PlayerJoins.getDbEntries( Format( "WHERE playerId = %i AND joinedTime >= %s ORDER BY joinedTime DESC", ply.kPlayerId, timePart ) )
     end )
