@@ -58,12 +58,12 @@ end
 function generate()
     for i = 0, 6 do 
         if Pointshop2.DB.CONNECTED_TO_MYSQL then
-            Pointshop2.DB.DoQuery(Format("INSERT INTO ps2_plyjoinstreak(playerId, joinedTime) VALUES (%i, NOW() - INTERVAL %i DAY)", 110, i))
+            Pointshop2.DB.DoQuery(Format("INSERT INTO ps2_plyjoinstreak(playerId, joinedTime) VALUES (%i, NOW() - INTERVAL %i DAY)", player.GetByID(1).kPlayerId, i))
             :Then(function() 
                 print("CREATED")
             end)
         else
-            Pointshop2.DB.DoQuery(Format("INSERT INTO ps2_plyjoinstreak(playerId, joinedTime) VALUES (%i, datetime('now', '-%idays'))", player.GetByID(1).kPlayerId, i))
+            Pointshop2.DB.DoQuery(Format("INSERT INTO ps2_plyjoinstreak(playerId, joinedTime) VALUES (%i, datetime('now', '-%i day'))", player.GetByID(1).kPlayerId, i))
             :Then(function() 
                 print("CREATED", player.GetByID(1).kPlayerId)
             end)

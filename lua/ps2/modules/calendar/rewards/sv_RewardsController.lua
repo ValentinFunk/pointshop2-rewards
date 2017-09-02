@@ -115,7 +115,7 @@ function RewardsController:resetRunningStreak( ply )
 		if Pointshop2.DB.CONNECTED_TO_MYSQL then
             timePart = "NOW() - INTERVAL 1 MINUTE"
         else
-            timePart = "datetime('now', '-1minutes')"
+            timePart = "datetime('now', '-1 minute')"
         end
 		KLogf(4, "Reset where date  < %s", timePart)
 		return Pointshop2.PlayerJoins.removeDbEntries("WHERE joinedTime <= " .. timePart .. " AND playerId = " .. ply.kPlayerId)
