@@ -8,9 +8,20 @@ function RewardsController:canDoAction( ply, action )
 	return Promise.Reject( )
 end
 
+local running = { }
+hook.Add( "PlayerDisconnected", "RewardsController:handleDisconnected", function( ply )
+	running[ply] = false
+end )
 function RewardsController:ClaimDay( ply )
-	return WhenAllFinished{ Pointshop2.PlayerJoins.static.getCurrentStreak( ply, Pointshop2.Rewards.DAYS_TRACKED ), Pointshop2.RewardUses.getLastest( ply, 1 ) }
-	:Then( function( streak, latestUses )
+	if running[ply] then
+		return Promise.Reject("Slow down!")
+	end
+
+	running[ply] = true
+	return WhenAllFinished{
+		Pointshop2.PlayerJoins.static.getCurrentStreak( ply, Pointshop2.Rewards.DAYS_TRACKED ),
+		Pointshop2.RewardUses.getLastest( ply, 1 )
+	}:Then( function( streak, latestUses )
 		if #latestUses > 0 and os.date( "%x", latestUses[#latestUses].date ) == os.date( "%x", system.SteamTime() ) then
 			return Promise.Reject( "You have already claimed the reward!" )
 		end
@@ -24,6 +35,7 @@ function RewardsController:ClaimDay( ply )
 			KLogf( 2, "Rewards are not configured properly! Please set a reward for each day!" )
 			return Promise.Reject( "Invalid Factory - has the reward system been configured?" )
 		end
+
 		return factory:CreateItem( )
 	end )
 	:Then( function( item )
@@ -42,7 +54,29 @@ function RewardsController:ClaimDay( ply )
 			item.purchaseData.amount = 0
 			item.purchaseData.currency = "points"
 		end
-		return item:save( )
+
+		local use = Pointshop2.RewardUses:new( )
+		use.player = ply.kPlayerId
+
+		local transaction = Pointshop2.DB.Transaction()
+		transaction:begin()
+		transaction:add(item:getSaveSql()) -- Create Item
+		transaction:add(use:getSaveSql())
+		return transaction:commit():Then(function()
+			if Pointshop2.DB.CONNECTED_TO_MYSQL then
+				return Pointshop2.DB.DoQuery( "SELECT LAST_INSERT_ID() as id" )
+			else
+				return Pointshop2.DB.DoQuery( "SELECT last_insert_rowid() as id" )
+			end
+		end ):Then( function( id )
+			item.id = id[1].id
+			return item
+		end):Then( Promise.Resolve, function( err )
+			LibK.GLib.Error( "Pointshop2Controller:internalBuyItem - Error running sql " + tostring( err ) )
+			return Pointshop2.DB.DoQuery( "ROLLBACK" ):Then( function( )
+				return Promise.Reject( "Error!" )
+			end )
+		end )
 	end )
 	:Then( function( item )
 		KInventory.ITEMS[item.id] = item
@@ -55,12 +89,13 @@ function RewardsController:ClaimDay( ply )
 		end )
 	end )
 	:Then( function( )
-		local use = Pointshop2.RewardUses:new( )
-		use.player = ply.kPlayerId
-		use:save( )
-	end )
-	:Then( function( )
 		self:SendPlayerInfo( ply )
+	end )
+	:Fail(function(err)
+		Pointshop2Controller:getInstance( ):startView( "Pointshop2View", "displayError", ply, err )
+	end)
+	:Always( function( )
+		running[ply] = false
 	end )
 end
 
