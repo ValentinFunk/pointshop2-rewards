@@ -13,7 +13,7 @@ function PANEL:Init( )
 	self.infoPanel:DockMargin( 0, 0, 0, 10 )
 
 	self.itemPicker = vgui.Create( "DCalendarItemPicker", self )
-    self.itemPicker:InitDays( 7 )
+    self.itemPicker:InitDays( Pointshop2.Rewards.DAYS_TRACKED )
 	self.itemPicker:Dock( FILL )
 
 	self.saveButton = vgui.Create( "DButton", self )
@@ -25,7 +25,7 @@ function PANEL:Init( )
 	function self.saveButton.DoClick( )
 		self.settings["DailyRewards.Items"] = self.itemPicker:GetSaveData( )
 
-		for i = 1, 7 do
+		for i = 1, Pointshop2.Rewards.DAYS_TRACKED do
 			if not self.settings["DailyRewards.Items"][i] then
 				return Derma_Message( "Please set a reward for each day. Day " .. i .. " is missing a reward.", "Error" )
 			end

@@ -13,15 +13,19 @@ hook.Add( "PlayerDisconnected", "RewardsController:handleDisconnected", function
 	running[ply] = false
 end )
 function RewardsController:ClaimDay( ply )
-	if running[ply] then
-		return Promise.Reject("Slow down!")
-	end
+	return Promise.Resolve()
+	:Then( function( )
+		if ply._RewardsLock then
+			return Promise.Reject( 'Player already has a pending claim' )
+		end
 
-	running[ply] = true
-	return WhenAllFinished{
-		Pointshop2.PlayerJoins.static.getCurrentStreak( ply, Pointshop2.Rewards.DAYS_TRACKED ),
-		Pointshop2.RewardUses.getLastest( ply, 1 )
-	}:Then( function( streak, latestUses )
+		ply._RewardsLock = true
+		return WhenAllFinished{
+		  Pointshop2.PlayerJoins.static.getCurrentStreak( ply, Pointshop2.Rewards.DAYS_TRACKED ),
+		  Pointshop2.RewardUses.getLastest( ply, 1 )
+		}
+	end )
+	:Then( function( streak, latestUses )
 		if #latestUses > 0 and os.date( "%x", latestUses[#latestUses].date ) == os.date( "%x", system.SteamTime() ) then
 			return Promise.Reject( "You have already claimed the reward!" )
 		end
@@ -91,11 +95,8 @@ function RewardsController:ClaimDay( ply )
 	:Then( function( )
 		self:SendPlayerInfo( ply )
 	end )
-	:Fail(function(err)
-		Pointshop2Controller:getInstance( ):startView( "Pointshop2View", "displayError", ply, err )
-	end)
 	:Always( function( )
-		running[ply] = false
+		ply._RewardsLock = false
 	end )
 end
 
