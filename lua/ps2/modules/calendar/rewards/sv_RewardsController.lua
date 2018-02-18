@@ -40,7 +40,7 @@ function RewardsController:ClaimDay( ply )
 			return Promise.Reject( "Invalid Factory - has the reward system been configured?" )
 		end
 
-		return factory:CreateItem( )
+		return factory:CreateItem( true )
 	end )
 	:Then( function( item )
 		local price = item.class:GetBuyPrice( ply )
@@ -64,8 +64,8 @@ function RewardsController:ClaimDay( ply )
 
 		local transaction = Pointshop2.DB.Transaction()
 		transaction:begin()
-		transaction:add(item:getSaveSql()) -- Create Item
 		transaction:add(use:getSaveSql())
+		transaction:add(item:getSaveSql()) -- Create Item
 		return transaction:commit():Then(function()
 			if Pointshop2.DB.CONNECTED_TO_MYSQL then
 				return Pointshop2.DB.DoQuery( "SELECT LAST_INSERT_ID() as id" )
@@ -73,7 +73,8 @@ function RewardsController:ClaimDay( ply )
 				return Pointshop2.DB.DoQuery( "SELECT last_insert_rowid() as id" )
 			end
 		end ):Then( function( id )
-			item.id = id[1].id
+			print("id", id)
+			item.id = tonumber(id[1].id)
 			return item
 		end):Then( Promise.Resolve, function( err )
 			LibK.GLib.Error( "Pointshop2Controller:internalBuyItem - Error running sql " + tostring( err ) )
@@ -83,7 +84,6 @@ function RewardsController:ClaimDay( ply )
 		end )
 	end )
 	:Then( function( item )
-		KInventory.ITEMS[item.id] = item
 		return ply.PS2_Inventory:addItem( item )
 		:Then( function( )
 			KLogf( 4, "Player %s used Rewards got item %s", ply:Nick( ), item:GetPrintName( ) or item.class.PrintName )
