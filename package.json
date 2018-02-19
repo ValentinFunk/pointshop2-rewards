@@ -1,6 +1,6 @@
 {
   "name": "pointshop2-rewards",
-  "version": "2.0.1",
+  "version": "2.0.4",
   "main": "index.js",
   "repository": "git@github.com:Kamshak/pointshop2-rewards.git",
   "author": "Valentin Funk <funk.valentin@gmail.com>",

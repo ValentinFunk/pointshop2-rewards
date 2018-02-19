@@ -1,5 +1,8 @@
 local PANEL = {}
-local text = "Log on for consecutive days to get your daily rewards! Click on your current streak's box to receive the reward.\nThe day count resets if you miss being online on a day or have claimed all rewards.\n\nCurrent logon streak: "
+local text = [[Log on for consecutive days to get your daily rewards! Click on your current streak's box to receive the reward.
+The day count resets if you miss being online on a day or have claimed all rewards.
+
+Current logon streak: "]]
 function PANEL:Init( )
     self.infoPanel = vgui.Create( "DInfoPanel", self )
 	self.infoPanel:Dock( TOP )

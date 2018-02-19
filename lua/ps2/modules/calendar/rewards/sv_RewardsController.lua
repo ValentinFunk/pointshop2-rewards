@@ -8,10 +8,6 @@ function RewardsController:canDoAction( ply, action )
 	return Promise.Reject( )
 end
 
-local running = { }
-hook.Add( "PlayerDisconnected", "RewardsController:handleDisconnected", function( ply )
-	running[ply] = false
-end )
 function RewardsController:ClaimDay( ply )
 	return Promise.Resolve()
 	:Then( function( )
@@ -73,7 +69,6 @@ function RewardsController:ClaimDay( ply )
 				return Pointshop2.DB.DoQuery( "SELECT last_insert_rowid() as id" )
 			end
 		end ):Then( function( id )
-			print("id", id)
 			item.id = tonumber(id[1].id)
 			return item
 		end):Then( Promise.Resolve, function( err )
@@ -94,9 +89,14 @@ function RewardsController:ClaimDay( ply )
 	end )
 	:Then( function( )
 		self:SendPlayerInfo( ply )
-	end )
-	:Always( function( )
 		ply._RewardsLock = false
+	end, function(err)
+		if err == 'Player already has a pending claim' then
+			return Promise.Resolve()
+		else
+			ply._RewardsLock = false
+			return Promise.Reject(err)
+		end
 	end )
 end
 
