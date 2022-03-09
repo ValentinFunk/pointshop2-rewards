@@ -1,7 +1,6 @@
 local PANEL = {}
 
 function PANEL:Init( )
-	self:SetSkin( Pointshop2.Config.DermaSkin )
 	self:SetText( "" )
 	self.day = 0
 
