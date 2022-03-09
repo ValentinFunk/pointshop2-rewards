@@ -4,6 +4,7 @@ The day count resets if you miss being online on a day or have claimed all rewar
 
 Current logon streak: "]]
 function PANEL:Init( )
+	self:SetSkin( Pointshop2.Config.DermaSkin )
     self.infoPanel = vgui.Create( "DInfoPanel", self )
 	self.infoPanel:Dock( TOP )
 	self.infoPanel:SetInfo( "Daily Rewards", text .. RewardsView:getInstance( ):GetStreak( ) )
